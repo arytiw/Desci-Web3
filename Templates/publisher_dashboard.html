@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Publisher Dashboard</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Orbitron Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --accent: #ffeb3b;
+      --bg: #000;
+      --bg-panel: rgba(20,20,20,0.95);
+      --text: #eee;
+    }
+
+    /* GLOBAL + GRID BACKDROP */
+    body {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.05) 20px, rgba(255,255,255,0.05) 21px),
+        repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255,255,255,0.05) 20px, rgba(255,255,255,0.05) 21px);
+    }
+    a { color: var(--accent); }
+    a:hover { color: #fff; }
+
+    /* NAVBAR */
+    .navbar {
+      background: #111;
+      border-bottom: 3px solid var(--accent);
+      box-shadow: 0 0 20px var(--accent);
+    }
+    .navbar-brand {
+      font-size: 1.8rem;
+      color: var(--accent) !important;
+    }
+    .btn-outline-danger {
+      color: #f00;
+      border-color: #f00;
+      transition: background .2s, color .2s;
+    }
+    .btn-outline-danger:hover {
+      background: #f00;
+      color: #000;
+    }
+
+    /* CONTENT PANEL */
+    .content-panel {
+      background: var(--bg-panel);
+      border-left: 6px solid var(--accent);
+      border-bottom: 6px solid var(--accent);
+      box-shadow: -10px 10px 0 #111;
+      padding: 2rem;
+      margin: 3rem auto;
+      max-width: 800px;
+      backdrop-filter: blur(4px);
+    }
+
+    /* FORM ELEMENTS */
+    .content-panel .form-control {
+      background: #111;
+      color: var(--text);
+      border: 1px solid var(--accent);
+      border-radius: 0;
+      transition: box-shadow .2s, border-color .2s;
+    }
+    .content-panel .form-control:focus {
+      outline: none;
+      box-shadow: 0 0 8px var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* BUTTONS */
+    .content-panel .btn-primary {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 0;
+      padding: .5rem 1.5rem;
+      font-weight: 600;
+      box-shadow: 0 0 15px var(--accent);
+      transition: transform .2s;
+    }
+    .content-panel .btn-primary:hover {
+      transform: scale(1.05);
+      background: #fff200;
+    }
+
+    /* ALERTS */
+    .content-panel .alert {
+      border: 1px solid var(--accent);
+      background: rgba(0,0,0,0.7);
+      color: var(--text);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    /* HEADINGS */
+    .content-panel h2 {
+      color: var(--accent);
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: .3rem;
+      margin-bottom: 1.5rem;
+      font-size: 1.75rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark px-4">
+    <a class="navbar-brand" href="index.html">DeSci Web3</a>
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <button class="btn btn-outline-danger" id="logoutBtn">Logout</button>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Panel -->
+  <div class="content-panel">
+    <h2>Publisher: Upload Research Paper</h2>
+    <form id="uploadForm">
+      <div class="mb-3">
+        <label class="form-label">Title</label>
+        <input type="text" id="title" class="form-control" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Author</label>
+        <input type="text" id="author" class="form-control" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Abstract</label>
+        <textarea id="abstract" class="form-control" rows="3" required></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Keywords (comma‑separated)</label>
+        <input type="text" id="keywords" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label for="fileInput" class="form-label">Select PDF File</label>
+        <input class="form-control" type="file" id="fileInput" accept=".pdf" required />
+      </div>
+      <button type="submit" class="btn btn-primary">Upload & Publish</button>
+    </form>
+    <div id="ipfsResult" class="mt-4"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    });
+
+    const uploadForm = document.getElementById('uploadForm');
+    const resultDiv   = document.getElementById('ipfsResult');
+    const JWT = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1N2E2M2ZlOS0yM2VmLTQ0ZjEtOTBlZS01ODBhZTA1NGZiNTUiLCJlbWFpbCI6InRpd2FyeWFuMTZAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjE5NWYwNzEwZDg0YTUyNmMwYjVlIiwic2NvcGVkS2V5U2VjcmV0IjoiZTAyMGEwY2Q4ZTk2N2VhMTQ0YjgxZTU3MmNmYTM4NTYyYmE3YTg5ODEyYWM0MjkxNmY0ODY3YmQ5OTEzY2Q2OCIsImV4cCI6MTc3NTY0MTg0OX0.hjtml7NIJi8a427BThdxrUU_zxuWBlICYfd-gYjGqGo'; // truncated
+
+    uploadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title    = document.getElementById('title').value.trim();
+      const author   = document.getElementById('author').value.trim();
+      const abs      = document.getElementById('abstract').value.trim();
+      const keywords = document.getElementById('keywords').value
+                        .split(',').map(k=>k.trim()).filter(k=>k);
+      const file     = document.getElementById('fileInput').files[0];
+      if (!file) return alert('Please select a PDF file.');
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('pinataMetadata', JSON.stringify({
+          name: `research_${title.replace(/\s+/g,'_')}`,
+          keyvalues: {
+            title, author, abstract: abs,
+            keywords: JSON.stringify(keywords),
+            status: "pending",
+            publisher_wallet: localStorage.getItem('desci_user')
+                              ? JSON.parse(localStorage.getItem('desci_user')).wallet
+                              : ""
+          }
+        }));
+        formData.append('pinataOptions', JSON.stringify({ cidVersion:1 }));
+
+        const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+          method:'POST', headers:{ Authorization:JWT }, body:formData
+        });
+        const data = await res.json();
+        if (!data.IpfsHash) throw new Error(data.error||'Pinata upload failed');
+        const cid = data.IpfsHash;
+
+        resultDiv.innerHTML = `
+          <div class="alert">Uploaded & Published!<br>
+            <strong>CID:</strong> <code>${cid}</code>
+          </div>
+          <p><a href="https://gateway.pinata.cloud/ipfs/${cid}" target="_blank">View on IPFS</a></p>
+        `;
+      } catch (err) {
+        console.error(err);
+        alert('Upload failed: ' + err.message);
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+  <script type="module" src="js/publisher-functions.js"></script>
+</body>
+</html>
