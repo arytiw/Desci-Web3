@@ -67,6 +67,8 @@ project-root/
 ├── package.json                # Node dependencies
 └── README.md                   # You are here
 ```
+To view the web page, go to Templates then run base.html.
+
 
 ---
 
