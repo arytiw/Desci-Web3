@@ -205,5 +205,5 @@ MIT License. Free to use, fork, and expand upon.
 
 ## 📣 Contact
 
-Built with ❤️ by [Your Name / Team Name]  
-For questions, reach out at: [your.email@example.com] or open an [Issue](https://github.com/yourusername/desci-web3/issues)
+Built with ❤️ by The Null Pointers  
+For questions: open an [Issue](https://github.com/yourusername/desci-web3/issues)
