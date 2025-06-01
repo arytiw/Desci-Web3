@@ -12,51 +12,167 @@
 
   <style>
     :root {
-      --accent: #ffeb3b;
-      --bg: #000;
-      --bg-panel: rgba(10,10,10,0.95);
-      --text: #eee;
+      --neon-blue: #4DEEEA;     /* Softer cyan */
+      --neon-red: #FF2E63;      /* Less aggressive red */
+      --bg: #0F1C2E;            /* Deeper blue background */
+      --bg-darker: #080F19;     /* Darker shade for contrast */
+      --bg-panel: rgba(15,28,46,0.95);  /* Panel background */
+      --text: #E9ECEF;          /* Softer white for better readability */
+      --text-muted: #8B97A5;    /* Muted text color */
+      --glow-blue: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue);
+      --glow-red: 0 0 5px var(--neon-red), 0 0 10px var(--neon-red);
+      --glow-text: 0 0 2px var(--text);
+    }
+
+    @keyframes neonFlicker {
+      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        text-shadow: var(--glow-blue);
+        opacity: 0.95;
+      }
+      20%, 22%, 24%, 55% {
+        text-shadow: none;
+        opacity: 0.85;
+      }
+    }
+
+    @keyframes borderGlow {
+      0% { border-color: var(--neon-blue); }
+      50% { border-color: var(--neon-red); }
+      100% { border-color: var(--neon-blue); }
     }
 
     /* GLOBAL + GRID */
     body {
       margin: 0;
       font-family: 'Orbitron', sans-serif;
-      background: var(--bg);
       color: var(--text);
-      background-image:
-        repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.05) 20px, rgba(255,255,255,0.05) 21px),
-        repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255,255,255,0.05) 20px, rgba(255,255,255,0.05) 21px);
+      line-height: 1.6;
+      letter-spacing: 0.3px;
+      position: relative;
+      overflow-x: hidden;
+      background: linear-gradient(
+        135deg,
+        var(--bg-darker) 0%,
+        var(--bg) 25%,
+        #1a2c47 50%,
+        var(--bg) 75%,
+        var(--bg-darker) 100%
+      );
+      background-size: 400% 400%;
+      animation: gradientMove 15s ease infinite;
     }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { color: #fff; }
+
+    @keyframes gradientMove {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    /* Grid Overlay - More subtle */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        linear-gradient(90deg, rgba(77,238,234,0.03) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,46,99,0.03) 1px, transparent 1px);
+      background-size: 30px 30px;
+      pointer-events: none;
+      z-index: 0;
+      animation: gridMove 20s linear infinite;
+    }
+
+    /* Ambient Overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(77,238,234,0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255,46,99,0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+      mix-blend-mode: overlay;
+    }
+
+    @keyframes gridMove {
+      0% {
+        transform: perspective(500px) rotateX(60deg) translateY(0);
+      }
+      100% {
+        transform: perspective(500px) rotateX(60deg) translateY(30px);
+      }
+    }
+
+    /* Content wrapper to ensure proper z-index stacking */
+    .content-wrapper {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Additional ambient animations */
+    @keyframes ambientGlow {
+      0%, 100% { 
+        box-shadow: 0 0 50px rgba(0,243,255,0.1),
+                    0 0 100px rgba(255,0,85,0.1);
+      }
+      50% { 
+        box-shadow: 0 0 100px rgba(0,243,255,0.2),
+                    0 0 50px rgba(255,0,85,0.2);
+      }
+    }
+
+    .content-panel {
+      position: relative;
+      z-index: 1;
+      animation: ambientGlow 4s ease-in-out infinite;
+    }
+
+    a { 
+      color: var(--neon-blue);
+      text-shadow: 0 0 2px var(--neon-blue);
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+    a:hover { 
+      color: var(--neon-red);
+      text-shadow: 0 0 3px var(--neon-red);
+    }
 
     /* NAVBAR */
     .navbar {
-      background: #111;
-      border-bottom: 3px solid var(--accent);
-      box-shadow: 0 0 30px var(--accent);
+      background: rgba(8,15,25,0.95);
+      border-bottom: 2px solid var(--neon-blue);
+      box-shadow: var(--glow-blue);
+      backdrop-filter: blur(10px);
     }
     .navbar-brand {
       font-size: 1.8rem;
-      color: var(--accent) !important;
+      color: var(--neon-blue) !important;
+      text-shadow: var(--glow-blue);
+      animation: neonFlicker 5s infinite;
     }
     .nav-link {
-      color: #ccc !important;
+      color: var(--text) !important;
+      text-shadow: var(--glow-text);
       margin-right: 1rem;
     }
-    .nav-link:hover { color: var(--accent) !important; }
-    .btn-warning {
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 0;
-      padding: .4rem 1rem;
-      font-weight: 600;
-      box-shadow: 0 0 15px var(--accent);
-      transition: transform .2s;
+    .nav-link:hover { 
+      color: var(--neon-red) !important;
+      text-shadow: var(--glow-red);
     }
-    .btn-warning:hover { transform: scale(1.05); }
 
     /* CAROUSEL HERO */
     .carousel-item {
@@ -64,30 +180,88 @@
       min-height: 300px;
       background-size: cover;
       background-position: center;
+      position: relative;
+      background-color: var(--bg-darker);
+    }
+    .carousel-item::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, 
+        rgba(77,238,234,0.15), 
+        rgba(255,46,99,0.15)
+      );
+      z-index: 1;
     }
     .carousel-caption {
       bottom: 20%;
-      text-shadow: 0 0 10px rgba(0,0,0,0.7);
+      text-shadow: var(--glow-text);
+      z-index: 2;
     }
     .carousel-caption h1 {
       font-size: 3rem;
-      color: var(--accent);
+      color: var(--neon-blue);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: var(--glow-blue);
     }
     .carousel-caption p {
       font-size: 1.2rem;
       color: var(--text);
+      text-shadow: var(--glow-text);
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.8;
+    }
+
+    /* Additional carousel background patterns */
+    .carousel-item.cyberpunk-1 {
+      background-image: linear-gradient(45deg, var(--bg-darker) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--bg-darker) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--bg-darker) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--bg-darker) 75%);
+      background-size: 20px 20px;
+      background-color: var(--bg);
+    }
+    
+    .carousel-item.cyberpunk-2 {
+      background-image: 
+        repeating-linear-gradient(0deg, var(--neon-blue) 0px, var(--neon-blue) 1px, transparent 1px, transparent 20px),
+        repeating-linear-gradient(90deg, var(--neon-red) 0px, var(--neon-red) 1px, transparent 1px, transparent 20px);
+      background-color: var(--bg);
+    }
+    
+    .carousel-item.cyberpunk-3 {
+      background-image: 
+        radial-gradient(circle at 50% 50%, var(--neon-blue) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, var(--neon-red) 2px, transparent 2px);
+      background-size: 30px 30px;
+      background-position: 0 0, 15px 15px;
+      background-color: var(--bg);
+    }
+    
+    .carousel-item.cyberpunk-4 {
+      background-image: 
+        linear-gradient(90deg, transparent 50%, var(--neon-blue) 50%),
+        linear-gradient(90deg, transparent 50%, var(--neon-red) 50%);
+      background-size: 4px 100%, 4px 100%;
+      background-position: 0 0, 2px 0;
+      background-color: var(--bg);
     }
 
     /* MAIN CONTENT PANEL */
     .content-panel {
       background: var(--bg-panel);
-      border-left: 6px solid var(--accent);
-      border-bottom: 6px solid var(--accent);
-      box-shadow: -10px 10px 0 #111;
+      border-left: 4px solid var(--neon-blue);
+      border-bottom: 4px solid var(--neon-red);
+      box-shadow: -5px 5px 0 rgba(77,238,234,0.1);
       padding: 2rem;
       margin: 3rem auto;
       max-width: 1200px;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(10px);
     }
 
     /* SECTIONS */
@@ -95,133 +269,288 @@
       margin-bottom: 2.5rem;
     }
     .content-panel section h2 {
-      color: var(--accent);
-      border-bottom: 2px solid var(--accent);
+      color: var(--neon-blue);
+      border-bottom: 2px solid var(--neon-red);
       padding-bottom: .3rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
       font-size: 1.75rem;
+      text-shadow: 0 0 3px var(--neon-blue);
     }
     .content-panel section p,
     .content-panel section ul {
-      color: #ccc;
-      line-height: 1.6;
+      color: var(--text);
+      line-height: 1.8;
+      text-shadow: var(--glow-text);
+      margin-bottom: 1.2rem;
     }
     .content-panel section ul {
-      list-style: square;
+      list-style: none;
       margin-left: 1.5rem;
+    }
+    .content-panel section ul li {
+      margin-bottom: 0.8rem;
+    }
+    .content-panel section ul li::before {
+      content: '>';
+      color: var(--neon-red);
+      margin-right: 10px;
+      text-shadow: 0 0 2px var(--neon-red);
     }
 
     /* FOOTER */
     footer {
-      background: #111;
-      color: #666;
+      background: rgba(8,15,25,0.95);
+      color: var(--text-muted);
       text-align: center;
       padding: 2rem 0;
-      border-top: 1px solid #333;
+      border-top: 1px solid var(--neon-blue);
       font-size: .9rem;
+      text-shadow: var(--glow-text);
+      box-shadow: var(--glow-blue);
+    }
+
+    /* Wallet connection button styles */
+    #connectButton {
+      transition: all 0.3s ease;
+    }
+    #connectButton.connected {
+      background: var(--neon-blue);
+      border-color: var(--neon-blue);
+      box-shadow: var(--glow-blue);
+    }
+    #connectButton:disabled {
+      opacity: 0.8;
+      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
-
-  <!-- NAVBAR -->
-  <nav class="navbar navbar-expand-lg">
-    <div class="container-fluid px-4">
-      <a class="navbar-brand" href="#">DeSci Web3</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto align-items-center">
-          <li class="nav-item"><a class="nav-link" href="register.html">Register</a></li>
-          <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
-          <li class="nav-item">
-            <button class="btn btn-warning ms-3" id="connectButton">Connect Wallet</button>
-          </li>
-        </ul>
+  <div class="content-wrapper">
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg">
+      <div class="container-fluid px-4">
+        <a class="navbar-brand" href="#">DeSci Web3</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto align-items-center">
+            <li class="nav-item"><a class="nav-link" href="register.html">Register</a></li>
+            <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+            <li class="nav-item">
+              <button class="btn btn-warning ms-3" id="connectButton">Connect Wallet</button>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
-  </nav>
+    </nav>
 
-  <!-- CAROUSEL HERO -->
-  <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
-    <div class="carousel-inner">
-      <div class="carousel-item active" style="background-image:url('https://i.imgur.com/8h3XQ2f.jpg')"></div>
-      <div class="carousel-item" style="background-image:url('https://i.imgur.com/4aXgRjt.jpg')"></div>
-      <div class="carousel-item" style="background-image:url('https://i.imgur.com/pZ9fY0A.jpg')"></div>
-      <div class="carousel-item" style="background-image:url('https://i.imgur.com/TKZfJqY.jpg')"></div>
+    <!-- CAROUSEL HERO -->
+    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+      <div class="carousel-inner">
+        <div class="carousel-item active cyberpunk-1"></div>
+        <div class="carousel-item cyberpunk-2"></div>
+        <div class="carousel-item cyberpunk-3"></div>
+        <div class="carousel-item cyberpunk-4"></div>
+      </div>
+      <div class="carousel-caption d-none d-md-block">
+        <h1>Decentralized Science on‑Chain</h1>
+        <p>Publish, review & reward research in a trustless, immutable ecosystem.</p>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+      </button>
     </div>
-    <div class="carousel-caption d-none d-md-block">
-      <h1>Decentralized Science on‑Chain</h1>
-      <p>Publish, review & reward research in a trustless, immutable ecosystem.</p>
+
+    <!-- MAIN CONTENT -->
+    <div class="content-panel">
+      <!-- About -->
+      <section id="about">
+        <h2>About DeSci Web3</h2>
+        <p>
+          DeSci Web3 transforms academic publishing by minting papers as NFTs, enabling transparent peer review on‑chain, and rewarding contributors fairly.
+        </p>
+      </section>
+
+      <!-- Use Cases -->
+      <section id="use-cases">
+        <h2>Use Cases</h2>
+        <ul>
+          <li>Immutable timestamping of research outputs</li>
+          <li>On‑chain reputation for authors & reviewers</li>
+          <li>Decentralized funding via token rewards</li>
+          <li>Open access without intermediaries</li>
+        </ul>
+      </section>
+
+
+      <!-- Future Scope -->
+      <section id="future-scope">
+        <h2>Future Scope</h2>
+        <ul>
+          <li>Decentralized identity (DID) for verified credentials</li>
+          <li>Automated bounties via smart contracts</li>
+          <li>Cross‑chain interoperability</li>
+          <li>AI‑driven discovery & recommendations</li>
+        </ul>
+      </section>
     </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-      <span class="carousel-control-prev-icon"></span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-      <span class="carousel-control-next-icon"></span>
-    </button>
+
+    <!-- FOOTER -->
+    <footer>
+      &copy; 2025 DeSci Web3 • Powered by Ethereum Sepolia • Built with ❤️
+    </footer>
   </div>
-
-  <!-- MAIN CONTENT -->
-  <div class="content-panel">
-    <!-- About -->
-    <section id="about">
-      <h2>About DeSci Web3</h2>
-      <p>
-        DeSci Web3 transforms academic publishing by minting papers as NFTs, enabling transparent peer review on‑chain, and rewarding contributors fairly.
-      </p>
-    </section>
-
-    <!-- Use Cases -->
-    <section id="use-cases">
-      <h2>Use Cases</h2>
-      <ul>
-        <li>Immutable timestamping of research outputs</li>
-        <li>On‑chain reputation for authors & reviewers</li>
-        <li>Decentralized funding via token rewards</li>
-        <li>Open access without intermediaries</li>
-      </ul>
-    </section>
-
-    <!-- Injected Content -->
-    {% block content %}
-    <!-- Child pages (Publisher/Reviewer dashboards) go here -->
-    {% endblock %}
-
-    <!-- Future Scope -->
-    <section id="future-scope">
-      <h2>Future Scope</h2>
-      <ul>
-        <li>Decentralized identity (DID) for verified credentials</li>
-        <li>Automated bounties via smart contracts</li>
-        <li>Cross‑chain interoperability</li>
-        <li>AI‑driven discovery & recommendations</li>
-      </ul>
-    </section>
-  </div>
-
-  <!-- FOOTER -->
-  <footer>
-    &copy; 2025 DeSci Web3 • Powered by Ethereum Sepolia • Built with ❤️
-  </footer>
 
   <!-- MetaMask Connect Script -->
   <script>
-    window.addEventListener('load', () => {
-      const btn = document.getElementById('connectButton');
-      btn.addEventListener('click', async () => {
-        if (window.ethereum) {
-          try {
-            const [acct] = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            btn.innerText = `Connected: ${acct.slice(0,6)}…`;
-            btn.disabled = true;
-          } catch(e) { console.error(e); }
-        } else {
-          alert('Please install MetaMask!');
+    const connectButton = document.getElementById('connectButton');
+    
+    // More robust MetaMask detection
+    const isMetaMaskInstalled = () => {
+      const { ethereum } = window;
+      console.log('Checking MetaMask installation:');
+      console.log('- window.ethereum exists:', !!ethereum);
+      console.log('- ethereum providers:', ethereum?.providers);
+      console.log('- isMetaMask flag:', ethereum?.isMetaMask);
+      
+      // First check if we have the ethereum object
+      if (!ethereum) {
+        console.log('No ethereum object found');
+        return false;
+      }
+
+      // If we have multiple providers (like if you have both MetaMask and Coinbase Wallet)
+      if (ethereum.providers?.length) {
+        const metamaskProvider = ethereum.providers.find(p => p.isMetaMask);
+        console.log('Found MetaMask in providers:', !!metamaskProvider);
+        return !!metamaskProvider;
+      }
+
+      // Single provider case
+      console.log('Single provider detected, isMetaMask:', ethereum.isMetaMask);
+      return ethereum.isMetaMask;
+    };
+
+    // Update button text based on connection status
+    const updateButtonText = (account) => {
+      if (account) {
+        connectButton.textContent = `Connected: ${account.slice(0,6)}...${account.slice(-4)}`;
+        connectButton.classList.add('connected');
+      } else {
+        connectButton.textContent = 'Connect Wallet';
+        connectButton.classList.remove('connected');
+      }
+    };
+
+    // Handle connection
+    const connectWallet = async () => {
+      console.log('Connect wallet clicked');
+      const { ethereum } = window;
+
+      try {
+        // Double check ethereum object
+        if (!ethereum) {
+          console.error('No ethereum object found');
+          alert('MetaMask not detected. Please make sure MetaMask is installed and refresh the page.');
+          return;
         }
-      });
+
+        // Get the actual provider if multiple exist
+        const provider = ethereum.providers?.length 
+          ? ethereum.providers.find(p => p.isMetaMask)
+          : ethereum;
+
+        if (!provider) {
+          console.error('No MetaMask provider found');
+          alert('MetaMask not detected. Please make sure MetaMask is installed and refresh the page.');
+          return;
+        }
+
+        console.log('Requesting accounts...');
+        const accounts = await provider.request({
+          method: 'eth_requestAccounts'
+        });
+
+        console.log('Accounts received:', accounts);
+        if (accounts.length > 0) {
+          updateButtonText(accounts[0]);
+          connectButton.disabled = true;
+        } else {
+          throw new Error('No accounts found');
+        }
+
+      } catch (error) {
+        console.error('Connection error:', error);
+        if (error.code === 4001) {
+          alert('Please connect your MetaMask wallet to use this feature.');
+        } else if (error.code === -32002) {
+          alert('Please check MetaMask - connection request is pending.');
+        } else {
+          alert(`Failed to connect wallet: ${error.message || error}`);
+        }
+      }
+    };
+
+    // Handle chain changes
+    const handleChainChanged = () => {
+      console.log('Chain changed, reloading...');
+      window.location.reload();
+    };
+
+    // Handle account changes
+    const handleAccountsChanged = (accounts) => {
+      console.log('Accounts changed:', accounts);
+      if (accounts.length === 0) {
+        updateButtonText(null);
+        connectButton.disabled = false;
+      } else {
+        updateButtonText(accounts[0]);
+      }
+    };
+
+    // Initialize
+    window.addEventListener('load', async () => {
+      console.log('Page loaded, checking MetaMask status...');
+      
+      // Add a slight delay to ensure MetaMask injection is complete
+      setTimeout(async () => {
+        const installed = isMetaMaskInstalled();
+        console.log('MetaMask installed:', installed);
+
+        if (installed) {
+          try {
+            const { ethereum } = window;
+            const provider = ethereum.providers?.length 
+              ? ethereum.providers.find(p => p.isMetaMask)
+              : ethereum;
+
+            const accounts = await provider.request({
+              method: 'eth_accounts'
+            });
+            console.log('Initial accounts:', accounts);
+
+            if (accounts.length > 0) {
+              updateButtonText(accounts[0]);
+              connectButton.disabled = true;
+            }
+
+            // Setup event listeners
+            provider.on('chainChanged', handleChainChanged);
+            provider.on('accountsChanged', handleAccountsChanged);
+            
+          } catch (error) {
+            console.error('Error during initialization:', error);
+          }
+        }
+      }, 500); // 500ms delay
     });
+
+    // Connect button click handler
+    connectButton.addEventListener('click', connectWallet);
   </script>
 
   <!-- Bootstrap JS -->

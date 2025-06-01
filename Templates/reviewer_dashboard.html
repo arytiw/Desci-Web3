@@ -12,11 +12,31 @@
 
   <style>
     :root {
-      --accent: #ffeb3b;
-      --bg: #000;
-      --bg-panel: rgba(10,10,10,0.95);
-      --text: #eee;
+      --neon-blue: #00f3ff;
+      --neon-red: #ff0055;
+      --bg: #0a0a15;
+      --bg-darker: #05050f;
+      --bg-panel: rgba(10,10,25,0.95);
+      --text: #ffffff;
+      --glow-blue: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue), 0 0 30px var(--neon-blue);
+      --glow-red: 0 0 10px var(--neon-red), 0 0 20px var(--neon-red), 0 0 30px var(--neon-red);
     }
+
+    @keyframes neonFlicker {
+      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        text-shadow: var(--glow-blue);
+      }
+      20%, 22%, 24%, 55% {
+        text-shadow: none;
+      }
+    }
+
+    @keyframes borderGlow {
+      0% { border-color: var(--neon-blue); }
+      50% { border-color: var(--neon-red); }
+      100% { border-color: var(--neon-blue); }
+    }
+
     /* GLOBAL STYLES */
     body {
       margin: 0;
@@ -24,76 +44,156 @@
       background: var(--bg);
       color: var(--text);
       background-image:
-        repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.05) 20px, rgba(255,255,255,0.05) 21px),
-        repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255,255,255,0.05) 20px, rgba(255,255,255,0.05) 21px);
+        linear-gradient(45deg, rgba(0,243,255,0.05) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,0,85,0.05) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(0,243,255,0.05) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,0,85,0.05) 75%);
+      background-size: 20px 20px;
     }
+
     /* NAVBAR */
     .navbar {
-      background: #111;
-      border-bottom: 3px solid var(--accent);
-      box-shadow: 0 0 30px var(--accent);
+      background: rgba(5,5,15,0.9);
+      border-bottom: 3px solid var(--neon-blue);
+      box-shadow: var(--glow-blue);
+      backdrop-filter: blur(10px);
     }
     .navbar-brand {
       font-size: 1.8rem;
-      color: var(--accent) !important;
+      color: var(--neon-blue) !important;
+      text-shadow: var(--glow-blue);
+      animation: neonFlicker 5s infinite;
     }
     .nav-link {
-      color: #ccc !important;
+      color: var(--text) !important;
+      text-shadow: 0 0 5px var(--text);
     }
     .btn-danger {
       background: transparent;
-      border: 2px solid var(--accent);
-      color: var(--accent);
+      border: 2px solid var(--neon-red);
+      color: var(--neon-red);
       font-weight: bold;
       font-family: 'Orbitron', sans-serif;
-      transition: all 0.3s ease-in-out;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px var(--neon-red);
     }
     .btn-danger:hover {
-      background: var(--accent);
-      color: #000;
+      background: var(--neon-red);
+      color: var(--bg);
+      box-shadow: var(--glow-red);
     }
+
     /* MAIN CONTENT PANEL */
     .container {
       margin-top: 3rem;
       background: var(--bg-panel);
       padding: 2rem;
-      border-left: 6px solid var(--accent);
-      border-bottom: 6px solid var(--accent);
-      box-shadow: -10px 10px 0 #111;
-      backdrop-filter: blur(4px);
+      border-left: 6px solid var(--neon-blue);
+      border-bottom: 6px solid var(--neon-red);
+      box-shadow: -10px 10px 0 rgba(0,243,255,0.1);
+      backdrop-filter: blur(10px);
+      animation: borderGlow 3s infinite;
     }
+
     h2 {
-      color: var(--accent);
-      border-left: 6px solid var(--accent);
+      color: var(--neon-blue);
+      border-left: 6px solid var(--neon-red);
       padding-left: 15px;
       font-size: 1.75rem;
       margin-bottom: 1.5rem;
+      text-shadow: var(--glow-blue);
     }
+
+    p {
+      color: var(--text);
+      text-shadow: 0 0 5px var(--text);
+    }
+
     /* TABLE STYLES */
     table {
       background-color: transparent;
       color: var(--text);
     }
     th {
-      background-color: #111;
-      color: var(--accent);
+      background-color: var(--bg-darker);
+      color: var(--neon-blue);
       font-size: 1.1rem;
       cursor: pointer;
+      text-shadow: 0 0 5px var(--neon-blue);
+      border-bottom: 2px solid var(--neon-blue);
+      transition: all 0.3s ease;
     }
     /* Make sortable headers underlined */
     th.sortable {
-      text-decoration: underline;
+      text-decoration: none;
+      position: relative;
+    }
+    th.sortable::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--neon-blue);
+      box-shadow: var(--glow-blue);
+      transition: all 0.3s ease;
+    }
+    th.sortable:hover {
+      color: var(--neon-red);
+      text-shadow: var(--glow-red);
+    }
+    th.sortable:hover::after {
+      background: var(--neon-red);
+      box-shadow: var(--glow-red);
     }
     td {
-      background-color: #0f0f0f;
-      color: #ccc;
+      background-color: rgba(5,5,15,0.5);
+      color: var(--text);
+      text-shadow: 0 0 5px var(--text);
+      border-bottom: 1px solid rgba(0,243,255,0.2);
     }
     a {
-      color: var(--accent);
+      color: var(--neon-blue);
+      text-shadow: 0 0 5px var(--neon-blue);
       text-decoration: none;
+      transition: all 0.3s ease;
     }
     a:hover {
-      color: #fff;
+      color: var(--neon-red);
+      text-shadow: var(--glow-red);
+    }
+
+    /* ACTION BUTTONS */
+    .btn-success {
+      background: transparent;
+      border: 2px solid var(--neon-blue);
+      color: var(--neon-blue);
+      font-weight: bold;
+      font-family: 'Orbitron', sans-serif;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px var(--neon-blue);
+    }
+    .btn-success:hover {
+      background: var(--neon-blue);
+      color: var(--bg);
+      box-shadow: var(--glow-blue);
+      transform: scale(1.05);
+    }
+    .btn-danger.btn-sm {
+      background: transparent;
+      border: 2px solid var(--neon-red);
+      color: var(--neon-red);
+      font-weight: bold;
+      font-family: 'Orbitron', sans-serif;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px var(--neon-red);
+    }
+    .btn-danger.btn-sm:hover {
+      background: var(--neon-red);
+      color: var(--bg);
+      box-shadow: var(--glow-red);
+      transform: scale(1.05);
     }
   </style>
 </head>
