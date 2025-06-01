@@ -195,6 +195,28 @@
       box-shadow: var(--glow-red);
       transform: scale(1.05);
     }
+
+    .status-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+    .status-pending {
+      background: rgba(255, 193, 7, 0.2);
+      color: #ffc107;
+      border: 1px solid #ffc107;
+    }
+    .status-approved {
+      background: rgba(40, 167, 69, 0.2);
+      color: #28a745;
+      border: 1px solid #28a745;
+    }
+    .status-rejected {
+      background: rgba(220, 53, 69, 0.2);
+      color: #dc3545;
+      border: 1px solid #dc3545;
+    }
   </style>
 </head>
 <body>
@@ -213,16 +235,17 @@
   <!-- MAIN CONTENT PANEL -->
   <div class="container mt-5">
     <h2>Reviewer Dashboard</h2>
-    <p>Review submissions below. Click headers to sort. Approve or Reject updates the metadata counts.</p>
+    <p>Review submissions below. Click headers to sort. Papers you've already reviewed won't be shown.</p>
 
     <table class="table table-striped">
       <thead>
         <tr>
-          <th data-col="title"        class="sortable">Title</th>
-          <th data-col="author"       class="sortable">Author</th>
-          <th data-col="pdfCid"       class="sortable">PDF CID</th>
+          <th data-col="title" class="sortable">Title</th>
+          <th data-col="author" class="sortable">Author</th>
+          <th data-col="date" class="sortable">Date</th>
           <th data-col="approveCount" class="sortable">Approvals</th>
-          <th data-col="rejectCount"  class="sortable">Rejections</th>
+          <th data-col="rejectCount" class="sortable">Rejections</th>
+          <th>PDF</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -234,35 +257,57 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <script>
     const PINATA_JWT = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1N2E2M2ZlOS0yM2VmLTQ0ZjEtOTBlZS01ODBhZTA1NGZiNTUiLCJlbWFpbCI6InRpd2FyeWFuMTZAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjE5NWYwNzEwZDg0YTUyNmMwYjVlIiwic2NvcGVkS2V5U2VjcmV0IjoiZTAyMGEwY2Q4ZTk2N2VhMTQ0YjgxZTU3MmNmYTM4NTYyYmE3YTg5ODEyYWM0MjkxNmY0ODY3YmQ5OTEzY2Q2OCIsImV4cCI6MTc3NTY0MTg0OX0.hjtml7NIJi8a427BThdxrUU_zxuWBlICYfd-gYjGqGo';
-    let submissions  = [];
-    const sortState  = {};
+    let submissions = [];
+    const sortState = {};
 
-    // 1) Load only "pending" submissions
+    // Get current user's wallet
+    function getCurrentWallet() {
+      try {
+        const user = JSON.parse(localStorage.getItem('desci_user'));
+        return user?.wallet || null;
+      } catch {
+        return null;
+      }
+    }
+
+    // Check if user has reviewed this paper
+    function hasUserReviewed(paper) {
+      const wallet = getCurrentWallet();
+      if (!wallet) return false;
+      
+      const reviewers = paper.metadata?.keyvalues?.reviewers || '[]';
+      try {
+        return JSON.parse(reviewers).includes(wallet);
+      } catch {
+        return false;
+      }
+    }
+
+    // Load submissions
     async function loadSubmissions() {
       const resp = await fetch(
         `https://api.pinata.cloud/data/pinList?status=pinned&pageLimit=100&timestamp=${Date.now()}`,
         { headers: { Authorization: PINATA_JWT } }
       );
       const { rows } = await resp.json();
-      // newest first
       rows.sort((a, b) => new Date(b.date_pinned) - new Date(a.date_pinned));
 
-      return rows
-        .filter(r => r.metadata?.keyvalues?.status === 'pending')
-        .map(r => {
-          const kv = r.metadata.keyvalues;
-          return {
-            hash:         r.ipfs_pin_hash,
-            title:        kv.title        || '—',
-            author:       kv.author       || '—',
-            pdfCid:       r.ipfs_pin_hash,
-            approveCount: parseInt(kv.approveCount) || 0,
-            rejectCount:  parseInt(kv.rejectCount)  || 0
-          };
-        });
+      // Filter out papers the current user has already reviewed
+      return rows.filter(r => !hasUserReviewed(r)).map(r => {
+        const kv = r.metadata?.keyvalues || {};
+        return {
+          hash: r.ipfs_pin_hash,
+          title: kv.title || r.metadata?.name || '—',
+          author: kv.author || '—',
+          date: new Date(r.date_pinned).toLocaleDateString(),
+          approveCount: parseInt(kv.approveCount) || 0,
+          rejectCount: parseInt(kv.rejectCount) || 0,
+          reviewers: kv.reviewers || '[]'
+        };
+      });
     }
 
-    // 2) Render table
+    // Render table
     function render(rows) {
       const tbody = document.getElementById('submissionList');
       tbody.innerHTML = '';
@@ -271,12 +316,13 @@
         tr.innerHTML = `
           <td>${item.title}</td>
           <td>${item.author}</td>
-          <td>
-            <a href="https://gateway.pinata.cloud/ipfs/${item.pdfCid}"
-               target="_blank">${item.pdfCid}</a>
-          </td>
+          <td>${item.date}</td>
           <td>${item.approveCount}</td>
           <td>${item.rejectCount}</td>
+          <td>
+            <a href="https://gateway.pinata.cloud/ipfs/${item.hash}"
+               target="_blank">View PDF</a>
+          </td>
           <td>
             <button class="btn btn-success btn-sm me-1"
                     onclick="review('${item.hash}','approve')">
@@ -292,7 +338,7 @@
       });
     }
 
-    // 3) Sort helper
+    // Sort helper
     function sortRows(rows, col, asc) {
       return [...rows].sort((a, b) => {
         if (a[col] < b[col]) return asc ? -1 : 1;
@@ -301,7 +347,7 @@
       });
     }
 
-    // 4) Header clicks
+    // Header clicks
     document.querySelectorAll('th.sortable').forEach(th => {
       const col = th.dataset.col;
       th.addEventListener('click', () => {
@@ -310,20 +356,41 @@
       });
     });
 
-    // 5) Approve/Reject
+    // Approve/Reject
     async function review(cid, action) {
+      const wallet = getCurrentWallet();
+      if (!wallet) {
+        alert('Please connect your wallet first');
+        return;
+      }
+
       const pinResp = await fetch(
         `https://api.pinata.cloud/data/pinList?status=pinned&hashContains=${cid}`,
         { headers: { Authorization: PINATA_JWT } }
       );
       const pin = (await pinResp.json()).rows.find(r => r.ipfs_pin_hash === cid);
       if (!pin) return alert('Submission not found.');
+
       const kv = pin.metadata.keyvalues || {};
-      const a  = parseInt(kv.approveCount) || 0;
-      const rj = parseInt(kv.rejectCount)  || 0;
+      const approveCount = parseInt(kv.approveCount) || 0;
+      const rejectCount = parseInt(kv.rejectCount) || 0;
+      let reviewers = [];
+      try {
+        reviewers = JSON.parse(kv.reviewers || '[]');
+      } catch {
+        reviewers = [];
+      }
+
+      // Add current user to reviewers
+      if (!reviewers.includes(wallet)) {
+        reviewers.push(wallet);
+      }
+
       const updates = {
-        approveCount: action==='approve' ? a+1 : a,
-        rejectCount:  action==='reject'  ? rj+1 : rj
+        ...kv,
+        approveCount: action === 'approve' ? approveCount + 1 : approveCount,
+        rejectCount: action === 'reject' ? rejectCount + 1 : rejectCount,
+        reviewers: JSON.stringify(reviewers)
       };
 
       const res = await fetch('https://api.pinata.cloud/pinning/hashMetadata', {
@@ -334,28 +401,26 @@
         },
         body: JSON.stringify({
           ipfsPinHash: cid,
-          name:        pin.metadata.name,
-          keyvalues:   updates
+          name: pin.metadata.name,
+          keyvalues: updates
         })
       });
 
       if (res.ok) {
-        alert(action==='approve'
-          ? 'You approved this submission.'
-          : 'You rejected this submission.');
-        init();
+        alert(`You ${action}d this submission.`);
+        init(); // Refresh the list
       } else {
         alert('Failed to update metadata.');
       }
     }
 
-    // 6) Logout
+    // Logout
     document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.clear();
       window.location.href = 'login.html';
     });
 
-    // 7) Initialize
+    // Initialize
     async function init() {
       submissions = await loadSubmissions();
       render(submissions);
